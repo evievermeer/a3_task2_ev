@@ -1,0 +1,59 @@
+---
+title: "Assignment 4 - Task 2"
+author: "Evie Vermeer"
+date: "11/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(kableExtra)
+library(lubridate) 
+library(plotly)
+```
+
+```{r, include=FALSE}
+hares <- read_csv(here("data","bonanza_hares.csv"))
+
+```
+
+### Introduction 
+
+A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
+
+### Data and Analyses 
+A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
+
+### Annual Juvenile Hare Trap Counts 
+
+```{r}
+juvenile_hares <- hares %>% 
+  filter(age=="j") %>% 
+  get_dupes(trap) %>% 
+  mutate(date_new = mdy(date)) %>% 
+  mutate(year = year(date_new)) %>% 
+  group_by(year)
+
+ggplot(data=juvenile_hares, aes(x=year)) +
+  geom_histogram(bins=14)+
+  scale_x_continuous(breaks = c(1999-2012))+
+  theme_classic()+
+  labs(title="Annual Juvenile Hare Trap Counts",
+       x="Year",
+       y="# of Hares")
+  
+#Need to create x-axis scale with years 
+
+```
+
+
+
+
+Takeaways 
+
+
