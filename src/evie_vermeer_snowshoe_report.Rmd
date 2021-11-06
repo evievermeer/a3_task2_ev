@@ -40,8 +40,9 @@ juvenile_hares <- hares %>%
 
 ggplot(data=juvenile_hares, aes(x=year)) +
   geom_histogram(bins=14,color="black", fill="burlywood4")+
-  scale_fill_manual(breaks = c("1999:2012"))+
+  scale_x_continuous(breaks = 1999:2012)+
   theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+
   labs(title="Annual Juvenile Hare Trap Counts",
        x="Year",
        y="# of Hares")
@@ -54,5 +55,19 @@ ggplot(data=juvenile_hares, aes(x=year)) +
 
 
 Takeaways 
+
+
+
+
+```{r}
+
+ggplot(data=juvenile_hares, aes(x=weight, fill=sex, color=sex))+
+  theme_classic()+
+  geom_histogram(alpha=.2,color="white")+
+  scale_fill_manual(values=c("f"="magenta","m"="navy","NA"="gray"))+
+  facet_wrap(~grid)
+  
+
+```
 
 
