@@ -28,7 +28,7 @@ A 4 - 5 sentence "mini-introduction" to what this study is exploring, including 
 ### Data and Analyses 
 A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
 
-### Annual Juvenile Hare Trap Counts 
+### Annual Juvenile Snowshoe Hare Trap Counts 
 
 ```{r}
 juvenile_hares <- hares %>% 
@@ -36,19 +36,20 @@ juvenile_hares <- hares %>%
   get_dupes(trap) %>% 
   mutate(date_new = mdy(date)) %>% 
   mutate(year = year(date_new)) %>% 
-  group_by(year)
+  group_by(year) %>% 
+  mutate(site = case_when(
+    grid %in% c("bonrip") ~ "Bonrip",
+    grid %in% c("bonmat") ~ "Bonmat",
+    grid %in% c("bonbs") ~ "Bonbs"))
 
 ggplot(data=juvenile_hares, aes(x=year)) +
   geom_histogram(bins=14,color="black", fill="burlywood4")+
   scale_x_continuous(breaks = 1999:2012)+
   theme_classic()+
   theme(plot.title = element_text(hjust = 0.5))+
-  labs(title="Annual Juvenile Hare Trap Counts",
+  labs(title="Annual Juvenile Snowshoe Hare Trap Counts",
        x="Year",
        y="# of Hares")
-  
-#Need to create x-axis scale with years 
-
 ```
 ### Figure caption and takeaways
 
@@ -64,10 +65,98 @@ Takeaways
 ggplot(data=juvenile_hares, aes(x=weight, fill=sex, color=sex))+
   theme_classic()+
   geom_histogram(alpha=.2,color="white")+
-  scale_fill_manual(values=c("f"="magenta","m"="navy","NA"="gray"))+
-  facet_wrap(~grid)
+  scale_fill_manual(values=c("f"="magenta","m"="navy","NA"="gray1"),labels=c("Female","Male","NA"))+
+  facet_wrap(~site,)+
+   labs(x = "Weight (g)",
+       y= "# of Hares", 
+       fill = "Sex",
+       title = "Juveline Snowshoe Hare Weights by Sex and Site")+
+  theme(plot.title = element_text(hjust = 0.5), strip.background = element_rect(color="white", fill="gray"))
   
+```
+
+
+```{r}
+# Add table caption
+
+juvenile_hare_site_stats <- juvenile_hares %>% 
+  mutate(sex_full = case_when(
+    sex %in% c("f") ~ "Female",
+    sex %in% c("m") ~ "Male")) %>% 
+  group_by(site,sex_full) %>% 
+  summarize(mean_weight=mean(weight,na.rm=TRUE),
+            sd_weight=sd(weight, na.rm=TRUE),
+            sample_size=n()) 
+ 
+juvenile_hare_site_stats %>% 
+  kable(col.names = c("Site",
+                      "Sex",
+                      "Average Weight (g)",
+                      "Standard Deviation (g)",
+                      "Sample Size (n)"),
+        caption = "Average Weights of Juvenile Snowshoe Hares by Site and Sex",
+        digits = 1) %>% 
+  kable_styling(full_width = FALSE) 
+                
+                  
+# How to remove NaN? 
+# Is there a way to facet a table?
+```
+
+```{r}
+### Add table caption 
+
+juvenile_hare_stats <- juvenile_hares %>% 
+  mutate(sex_full = case_when(
+    sex %in% c("f") ~ "Female",
+    sex %in% c("m") ~ "Male")) %>% 
+  group_by(sex_full) %>% 
+  summarize(mean_weight=mean(weight,na.rm=TRUE),
+            sd_weight=sd(weight, na.rm=TRUE),
+            sample_size=n()) 
+ 
+juvenile_hare_stats %>% 
+  kable(col.names = c("Sex",
+                      "Average Weight (g)",
+                      "Standard Deviation (g)",
+                      "Sample Size (n)"),
+        caption = "Average Weights of Juvenile Snowshoe Hares by Sex",
+        digits = 1) %>% 
+  kable_styling(full_width = FALSE)
+                      
 
 ```
+
+```{r}
+
+ggplot(data=juvenile_hares, aes(x=weight))+
+  geom_histogram(bins=18)+
+  facet_wrap(~sex)
+
+ggplot(data=juvenile_hares, aes(sample=weight)) +
+  geom_qq()+
+  facet_wrap(~sex)
+
+```
+
+```{r}
+male_juvenile_hares <- juvenile_hares %>% 
+  filter(sex == "m") %>% 
+  pull(weight)
+  
+female_juvenile_hares <- juvenile_hares %>% 
+  filter(sex == "f") %>% 
+  pull(weight)  
+  
+sex_t <- t.test(female_juvenile_hares,male_juvenile_hares, na.rm=TRUE)
+
+sex_cohen <- cohen.d(female_juvenile_hares,male_juvenile_hares, na.rm = TRUE)
+
+sex_cohen
+sex_t
+```
+
+
+
 
 
