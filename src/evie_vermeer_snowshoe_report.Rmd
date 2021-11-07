@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 library(here)
 library(tidyverse)
@@ -15,21 +15,27 @@ library(janitor)
 library(kableExtra)
 library(lubridate) 
 library(plotly)
+library(effsize)
 ```
 
 ```{r, include=FALSE}
 hares <- read_csv(here("data","bonanza_hares.csv"))
 ```
 
-### Introduction 
+### Introduction:
+This study is exploring data of snowshoe hares, a keystone species sampled in the Bonanza Creek Experimental Forest starting in 1999. Snowshoe hares experience population fluctuations of 8-11 years. These data were published in 2017. 
 
-A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
+The report below will explore annual hare counts in the study, as well as relationships between hare weight and sex, as well as hindfoot length and sex. The report will visualize data in addition to running statistical analyses with interpretation. 
 
-### Data and Analyses 
-A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
+### Data and Analyses:
+Variables of consideration will be hare age, sex, trapping date, trapping site, weight and hindfoot length. The study's analyses will look at basic summary statistics such as mean, median, standard deviation, and sample count. Additionally, this study will use paired two-sample t-tests, cohen's "d" tests, and linear regressions to examine relationships of samples and sample means. 
 
-### Annual Juvenile Snowshoe Hare Trap Counts 
+Appreciation for the data in this study goes to:
+Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 (Accessed 2021-11-04).
 
+
+
+### Part i) Visualizing annual juvenile snowshoe hare trap counts:
 ```{r}
 juvenile_hares <- hares %>% 
   filter(age=="j") %>% 
@@ -46,20 +52,29 @@ ggplot(data=juvenile_hares, aes(x=year)) +
   geom_histogram(bins=14,color="black", fill="burlywood4")+
   scale_x_continuous(breaks = 1999:2012)+
   theme_classic()+
-  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust=.5))+
   labs(title="Annual Juvenile Snowshoe Hare Trap Counts",
        x="Year",
-       y="# of Hares")
+       y="# of Hares",
+       caption= expression(paste(bold("Figure 1."),"Count of Annual Juvenile Showshoe Hare Traps")))
 ```
-### Figure caption and takeaways
+
+```{r include=FALSE}
+juvenile_hares_count <- juvenile_hares %>% 
+  summarize(hare_count = n())
+
+juvenile_hares_count_summary <- juvenile_hares_count %>% 
+  summarize(mean_count = mean(hare_count, na.rm = TRUE),
+            median_count = median(hare_count, na.rm = TRUE),
+            sd_count = sd(hare_count, na.rm = TRUE))
+  
+```
 
 
+The histogram above shows several key takeaways. First, the maximum trapped count of 121 in 1999 stands in stark contrast to the zero counts in both 2002 and 2009. Also, the mean count of juvenile showshoe hares per year was 31, while the median was just 18.5 and the standard deviation was 35. Lastly, the issue of study effort here could very well skew our data. In order to ensure more standardized analyses in the future, establishing a consistent amount of study days and traps each year would help with more accurate analysis. This would also assist in analyzing whether or not this population decline is part of a typical 8-11 year population cycle that the study mentions, or if other factors may be at play.
 
-Takeaways 
-
-
-
-
+### Part ii) Visualizing juvenile snowshoe hare weights by sex and site:
 ```{r}
 
 ggplot(data=juvenile_hares, aes(x=weight, fill=sex, color=sex))+
@@ -70,15 +85,18 @@ ggplot(data=juvenile_hares, aes(x=weight, fill=sex, color=sex))+
    labs(x = "Weight (g)",
        y= "# of Hares", 
        fill = "Sex",
-       title = "Juveline Snowshoe Hare Weights by Sex and Site")+
-  theme(plot.title = element_text(hjust = 0.5), strip.background = element_rect(color="white", fill="gray"))
+       title = "Juveline Snowshoe Hare Weights by Sex and Site",
+       caption= expression(paste(bold("Figure 2.")," Count of Juvenile Showshoe Hare Weights by Sex and Site Trapped")))+
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=.5), 
+        strip.background = element_rect(color="white", fill="gray"))
   
 ```
 
+The faceted visualization here shows a distribution of juvenile snowshoe hare weights by each site at which they were trapped. The data here show that the Bonrip site collected far more observations than the two others. It also does not reveal any first indications of clear comparison between male and female snowshoe hare weights. This will be investigated further in the table below. 
+
 
 ```{r}
-# Add table caption
-
 juvenile_hare_site_stats <- juvenile_hares %>% 
   mutate(sex_full = case_when(
     sex %in% c("f") ~ "Female",
@@ -94,18 +112,17 @@ juvenile_hare_site_stats %>%
                       "Average Weight (g)",
                       "Standard Deviation (g)",
                       "Sample Size (n)"),
-        caption = "Average Weights of Juvenile Snowshoe Hares by Site and Sex",
+        caption = "Table 1. Average Weights of Juvenile Snowshoe Hares by Site and Sex",
         digits = 1) %>% 
-  kable_styling(full_width = FALSE) 
+  kable_styling(full_width = FALSE, bootstrap_options = "striped", position="left") 
                 
-                  
-# How to remove NaN? 
-# Is there a way to facet a table?
 ```
+These data show numeric representation of the histograms above. We see generally that the male hares weigh more than the female hares, but sample sizes are mostly small, and more analysis to clarify these observations is needed.
+
+
+### Part iii) Comparing male and female juvenile snowshoe hare weights:
 
 ```{r}
-### Add table caption 
-
 juvenile_hare_stats <- juvenile_hares %>% 
   mutate(sex_full = case_when(
     sex %in% c("f") ~ "Female",
@@ -120,14 +137,14 @@ juvenile_hare_stats %>%
                       "Average Weight (g)",
                       "Standard Deviation (g)",
                       "Sample Size (n)"),
-        caption = "Average Weights of Juvenile Snowshoe Hares by Sex",
+        caption = "Table 2. Average Weights of Juvenile Snowshoe Hares by Sex",
         digits = 1) %>% 
-  kable_styling(full_width = FALSE)
+  kable_styling(full_width = FALSE, bootstrap_options = "striped", position="left")
                       
 
 ```
 
-```{r}
+```{r, include=FALSE}
 
 ggplot(data=juvenile_hares, aes(x=weight))+
   geom_histogram(bins=18)+
@@ -139,7 +156,7 @@ ggplot(data=juvenile_hares, aes(sample=weight)) +
 
 ```
 
-```{r}
+```{r, include=FALSE}
 male_juvenile_hares <- juvenile_hares %>% 
   filter(sex == "m") %>% 
   pull(weight)
@@ -156,7 +173,40 @@ sex_cohen
 sex_t
 ```
 
+After running further analyses of the data tabled above, we see the difference in average sampled weights between male and female juvenile hares is 87.5 grams. However, analysis shows there is a small to moderate effect size (Cohen's *D* = `r round(sex_cohen$estimate,2)`), and the difference not significant (paired two-sample t-test, t=`r round(sex_t$statistic,2)`, p < .001). This would indicate that there is not a significant or notable difference in the mean weights between these two sample means. 
+
+### Part iv) Relationship between juvenile snowshoe hare weight and hind foot length:
+
+```{r}
+ggplot(data=juvenile_hares, aes(x=hindft,y=weight)) +
+  geom_jitter(color="goldenrod2")+
+  theme_minimal()+
+  labs(title="Juvenile Snowshoe Hare Hind Foot Length by Weight",
+       x="Hind Foot Length (mm)",
+       y="Weight (g)",
+       caption= expression(paste(bold("Figure 3.")," Relationship of Juvenile Showshoe Hare Weights by Hind Foot Length")))+
+       theme(plot.title = element_text(hjust = 0.4),
+             legend.title = element_blank(),
+             plot.caption = element_text(hjust = .5))
+  
+```
+
+```{r, include = FALSE}
+juvenile_hare_lm <- lm(weight ~ hindft, data=juvenile_hares)
+
+juvenile_hare_lm
+
+summary(juvenile_hare_lm)
+
+```
+Upon running a linear regression of these data, we see a regression slope of ~9.5, meaning that the average juvenile snowshoe hare's weight increases 9.5 grams for every mm of hindfoot length increase. However, the R-squared value of this regression is low (R = .3), meaning that value of sample weight can not be well-predicted by hindfoot length in this model. Additionally, a linear regression assumes homoskedasticity of data, and the plot above lends concern to this assumption as the data as it appears heteroskedastic. 
 
 
+### Summary of report findings:
+The report above has a few main findings:
+- Sampling methods of the data make definitive conclusions difficult
+- We cannot reject the null-hypothesis that male and female sample populations are from populations with the same mean. 
+- In addition to no clear conclusions about weight relationships to sex, a linear regression to determine the relationship between hare hindfoot length and weight is not possible. 
 
 
+Citation: Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 (Accessed 2021-11-07).
