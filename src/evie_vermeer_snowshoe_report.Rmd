@@ -16,6 +16,8 @@ library(kableExtra)
 library(lubridate) 
 library(plotly)
 library(effsize)
+library(broom)
+
 ```
 
 ```{r, include=FALSE}
@@ -192,21 +194,41 @@ ggplot(data=juvenile_hares, aes(x=hindft,y=weight)) +
 ```
 
 ```{r, include = FALSE}
-juvenile_hare_lm <- lm(weight ~ hindft, data=juvenile_hares)
+juvenile_weight <- juvenile_hares %>% 
+  pull(weight)
 
-juvenile_hare_lm
+juvenile_hindft <- juvenile_hares %>% 
+  pull(hindft)
+
+juvenile_hare_lm <- lm(juvenile_weight ~ juvenile_hindft)
+
+juvenile_hare_tidy <- tidy(juvenile_hare_lm)
 
 summary(juvenile_hare_lm)
 
 ```
-Upon running a linear regression of these data, we see a regression slope of ~9.5, meaning that the average juvenile snowshoe hare's weight increases 9.5 grams for every mm of hindfoot length increase. However, the R-squared value of this regression is low (R = .3), meaning that value of sample weight can not be well-predicted by hindfoot length in this model. Additionally, a linear regression assumes homoskedasticity of data, and the plot above lends concern to this assumption as the data as it appears heteroskedastic. 
+
+
+```{r include = FALSE}
+pearson_hare <- cor.test(juvenile_hindft,juvenile_weight)
+tidy_pearson_hare <- tidy(pearson_hare)
+```
+
+
+Upon running a linear regression of these data, we see a regression slope of `r round(juvenile_hare_tidy$estimate[2],2) `, meaning that in the model the average juvenile snowshoe hare's weight increases `r round(juvenile_hare_tidy$estimate[2],2) ` grams for every mm of hindfoot length increase. However, the R-squared value of this regression is low (R = .3) , meaning that only 30% of the variance in hindfoot length is predicted in this model. Also, the r value is `r round(tidy_pearson_hare$estimate,2)`, meaning there is not a strong correlation between weight and hindfoot length. Additionally, a linear regression assumes homoskedasticity of data, and the plot above lends concern to this assumption as the data as it appears heteroskedastic. 
 
 
 ### Summary of report findings:
 The report above has a few main findings:
-- Sampling methods of the data make definitive conclusions difficult
-- We cannot reject the null-hypothesis that male and female sample populations are from populations with the same mean. 
-- In addition to no clear conclusions about weight relationships to sex, a linear regression to determine the relationship between hare hindfoot length and weight is not possible. 
+
+* Sampling methods of the data make definitive conclusions difficult
+
+* We cannot reject the null-hypothesis that male and female sample populations are from populations with the same mean. 
+
+* In addition to no clear conclusions about weight relationships to sex, a linear regression to determine the relationship between hare hindfoot length and weight is not possible. 
 
 
 Citation: Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 (Accessed 2021-11-07).
+
+
+
