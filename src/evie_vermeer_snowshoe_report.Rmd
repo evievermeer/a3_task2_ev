@@ -17,7 +17,6 @@ library(lubridate)
 library(plotly)
 library(effsize)
 library(broom)
-
 ```
 
 ```{r, include=FALSE}
@@ -81,7 +80,7 @@ The histogram above shows several key takeaways. First, the maximum trapped coun
 
 ggplot(data=juvenile_hares, aes(x=weight, fill=sex, color=sex))+
   theme_classic()+
-  geom_histogram(alpha=.2,color="white")+
+  geom_histogram(alpha=.4,color="white")+
   scale_fill_manual(values=c("f"="magenta","m"="navy","NA"="gray1"),labels=c("Female","Male","NA"))+
   facet_wrap(~site,)+
    labs(x = "Weight (g)",
@@ -189,7 +188,8 @@ ggplot(data=juvenile_hares, aes(x=hindft,y=weight)) +
        caption= expression(paste(bold("Figure 3.")," Relationship of Juvenile Showshoe Hare Weights by Hind Foot Length")))+
        theme(plot.title = element_text(hjust = 0.4),
              legend.title = element_blank(),
-             plot.caption = element_text(hjust = .5))
+             plot.caption = element_text(hjust = .5)) +
+  geom_smooth(method=lm, color = "chocolate")
   
 ```
 
@@ -206,6 +206,8 @@ juvenile_hare_tidy <- tidy(juvenile_hare_lm)
 
 summary(juvenile_hare_lm)
 
+juvenile_hare_glance <- glance(juvenile_hare_lm)
+
 ```
 
 
@@ -215,7 +217,7 @@ tidy_pearson_hare <- tidy(pearson_hare)
 ```
 
 
-Upon running a linear regression of these data, we see a regression slope of `r round(juvenile_hare_tidy$estimate[2],2) `, meaning that in the model the average juvenile snowshoe hare's weight increases `r round(juvenile_hare_tidy$estimate[2],2) ` grams for every mm of hindfoot length increase. However, the R-squared value of this regression is low (R = .3) , meaning that only 30% of the variance in hindfoot length is predicted in this model. Also, the r value is `r round(tidy_pearson_hare$estimate,2)`, meaning there is not a strong correlation between weight and hindfoot length. Additionally, a linear regression assumes homoskedasticity of data, and the plot above lends concern to this assumption as the data as it appears heteroskedastic. 
+Upon running a linear regression of these data, we see that the model estimates that the average juvenile snowshoe hare's weight increases `r round(juvenile_hare_tidy$estimate[2],2) ` grams for every mm of hindfoot length increase. However, the R-squared value of this regression is low (R = `r round(juvenile_hare_glance$r.squared,2)`), meaning that only 30% of the variance in hindfoot length is predicted in this model. Also, the r value is `r round(tidy_pearson_hare$estimate,2)`, meaning there is not a strong correlation between weight and hindfoot length. Additionally, a linear regression assumes homoskedasticity of data, and the plot above lends concern to this assumption as the data as it appears heteroskedastic. 
 
 
 ### Summary of report findings:
