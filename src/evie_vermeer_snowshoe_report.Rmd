@@ -66,14 +66,14 @@ juvenile_hares_count <- juvenile_hares %>%
   summarize(hare_count = n())
 
 juvenile_hares_count_summary <- juvenile_hares_count %>% 
-  summarize(mean_count = mean(hare_count, na.rm = TRUE),
-            median_count = median(hare_count, na.rm = TRUE),
-            sd_count = sd(hare_count, na.rm = TRUE))
+  summarize(mean_count = mean(hare_count),
+            median_count = median(hare_count),
+            sd_count = sd(hare_count))
   
 ```
 
 
-The histogram above shows several key takeaways. First, the maximum trapped count of 121 in 1999 stands in stark contrast to the zero counts in both 2002 and 2009. Also, the mean count of juvenile showshoe hares per year was 31, while the median was just 18.5 and the standard deviation was 35. Lastly, the issue of study effort here could very well skew our data. In order to ensure more standardized analyses in the future, establishing a consistent amount of study days and traps each year would help with more accurate analysis. This would also assist in analyzing whether or not this population decline is part of a typical 8-11 year population cycle that the study mentions, or if other factors may be at play.
+The histogram above shows several key takeaways. First, the maximum trapped count of 121 in 1999 stands in stark contrast to the zero counts in both 2002 and 2009. Also, the mean count of juvenile showshoe hares per year was `r round(juvenile_hares_count_summary$mean_count,2)`, while the median was just `r round(juvenile_hares_count_summary$median_count,2)` and the standard deviation was `r round(juvenile_hares_count_summary$sd_count,2)`. Lastly, the issue of study effort here could very well skew our data. In order to ensure more standardized analyses in the future, establishing a consistent amount of study days and traps each year would help with more accurate analysis. This would also assist in analyzing whether or not this population decline is part of a typical 8-11 year population cycle that the study mentions, or if other factors may be at play.
 
 ### Part ii) Visualizing juvenile snowshoe hare weights by sex and site:
 ```{r}
@@ -103,13 +103,16 @@ juvenile_hare_site_stats <- juvenile_hares %>%
     sex %in% c("f") ~ "Female",
     sex %in% c("m") ~ "Male")) %>% 
   group_by(site,sex_full) %>% 
-  summarize(mean_weight=mean(weight,na.rm=TRUE),
+  drop_na(weight) %>% 
+  summarize(median_weight=median(weight,na.rm=TRUE),
+            mean_weight=mean(weight,na.rm=TRUE),
             sd_weight=sd(weight, na.rm=TRUE),
             sample_size=n()) 
- 
+
 juvenile_hare_site_stats %>% 
   kable(col.names = c("Site",
                       "Sex",
+                      "Median Weight(g)",
                       "Average Weight (g)",
                       "Standard Deviation (g)",
                       "Sample Size (n)"),
@@ -129,12 +132,14 @@ juvenile_hare_stats <- juvenile_hares %>%
     sex %in% c("f") ~ "Female",
     sex %in% c("m") ~ "Male")) %>% 
   group_by(sex_full) %>% 
-  summarize(mean_weight=mean(weight,na.rm=TRUE),
+  summarize(median_weight=median(weight, na.rm=TRUE),
+            mean_weight=mean(weight,na.rm=TRUE),
             sd_weight=sd(weight, na.rm=TRUE),
             sample_size=n()) 
  
 juvenile_hare_stats %>% 
   kable(col.names = c("Sex",
+                      "Median Weight (g)",
                       "Average Weight (g)",
                       "Standard Deviation (g)",
                       "Sample Size (n)"),
@@ -170,11 +175,11 @@ sex_t <- t.test(female_juvenile_hares,male_juvenile_hares, na.rm=TRUE)
 
 sex_cohen <- cohen.d(female_juvenile_hares,male_juvenile_hares, na.rm = TRUE)
 
-sex_cohen
-sex_t
+difference_means <- sum(juvenile_hare_stats$mean_weight[2]-juvenile_hare_stats$mean_weight[1])
+
 ```
 
-After running further analyses of the data tabled above, we see the difference in average sampled weights between male and female juvenile hares is 87.5 grams. However, analysis shows there is a small to moderate effect size (Cohen's *D* = `r round(sex_cohen$estimate,2)`), and the difference not significant (paired two-sample t-test, t=`r round(sex_t$statistic,2)`, p < .001). This would indicate that there is not a significant or notable difference in the mean weights between these two sample means. 
+After running further analyses of the data tabled above, we see the difference in average sampled weights between male and female juvenile hares is `r round(difference_means,2)` grams. Analysis shows this difference is means is significant, (paired two-sample t-test, t=`r round(sex_t$statistic,2)`, p < .001). However, the effect size is small to moderate, (Cohen's *D* = `r round(sex_cohen$estimate,2)`). This would indicate that more research should occur to determine comparisons between these two sample means. 
 
 ### Part iv) Relationship between juvenile snowshoe hare weight and hind foot length:
 
@@ -225,10 +230,9 @@ The report above has a few main findings:
 
 * Sampling methods of the data make definitive conclusions difficult
 
-* We cannot reject the null-hypothesis that male and female sample populations are from populations with the same mean. 
+* Despite a low p-value, a small to moderate effect size means we cannot conclusively reject the null-hypothesis that male and female sample populations are from populations with the same mean. 
 
-* In addition to no clear conclusions about weight relationships to sex, a linear regression to determine the relationship between hare hindfoot length and weight is not possible. 
-
+* In addition to no clear conclusions about weight relationships to sex, a linear regression to determine the relationship between hare hindfoot length and weight is not reliable. 
 
 Citation: Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 (Accessed 2021-11-07).
 
